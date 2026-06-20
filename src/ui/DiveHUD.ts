@@ -4,6 +4,7 @@ export class DiveHUD extends Phaser.Scene {
     oxygenText!: Phaser.GameObjects.Text;
     healthText!: Phaser.GameObjects.Text;
     salvageText!: Phaser.GameObjects.Text;
+    fragmentText!: Phaser.GameObjects.Text;
     levelText!: Phaser.GameObjects.Text;
     xpBarBg!: Phaser.GameObjects.Rectangle;
     xpBarFill!: Phaser.GameObjects.Rectangle;
@@ -26,6 +27,7 @@ export class DiveHUD extends Phaser.Scene {
         }
 
         this.salvageText = this.add.text(20, 90, `Salvage: ${this.registry.get('salvage')}`, { fontSize: '20px', color: '#ffff00' });
+        this.fragmentText = this.add.text(20, 115, `Fragments: ${this.registry.get('fragments') || 0}/3`, { fontSize: '20px', color: '#00ffaa' });
 
         this.depthText = this.add.text(this.scale.width / 2, 20, 'Depth: 1000m / 4900m', { fontSize: '24px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5, 0);
 
@@ -55,10 +57,22 @@ export class DiveHUD extends Phaser.Scene {
             }
         };
 
-        this.levelText = this.add.text(20, 110, `Lvl ${this.registry.get('diverLevel')}`, { fontSize: '20px', color: '#ff00ff', fontStyle: 'bold' });
-        this.xpBarBg = this.add.rectangle(80, 115, 200, 15, 0x333333).setOrigin(0, 0);
-        this.xpBarFill = this.add.rectangle(80, 115, 0, 15, 0xff00ff).setOrigin(0, 0);
-        this.xpBarText = this.add.text(180, 114, '', { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5, 0);
+        const updateFragments = (_parent: any, value: number) => {
+            if (this.fragmentText && this.fragmentText.active) {
+                if (value >= 3) {
+                    this.fragmentText.setText(`TRUE ARTIFACT REVEALED AT 4900m!`);
+                    this.fragmentText.setColor('#ff0000');
+                    this.fragmentText.setFontStyle('bold');
+                } else {
+                    this.fragmentText.setText(`Fragments: ${value}/3`);
+                }
+            }
+        };
+
+        this.levelText = this.add.text(20, 140, `Lvl ${this.registry.get('diverLevel')}`, { fontSize: '20px', color: '#ff00ff', fontStyle: 'bold' });
+        this.xpBarBg = this.add.rectangle(80, 145, 200, 15, 0x333333).setOrigin(0, 0);
+        this.xpBarFill = this.add.rectangle(80, 145, 0, 15, 0xff00ff).setOrigin(0, 0);
+        this.xpBarText = this.add.text(180, 144, '', { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5, 0);
         this.updateXPBar();
 
         const updateXP = () => this.updateXPBar();
@@ -86,12 +100,14 @@ export class DiveHUD extends Phaser.Scene {
 
         // Listen for salvage changes in registry
         this.registry.events.on('changedata-salvage', updateSalvage);
+        this.registry.events.on('changedata-fragments', updateFragments);
         this.registry.events.on('changedata-researchPoints', updateXP);
         this.registry.events.on('changedata-diverLevel', updateXP);
         this.registry.events.on('level_up', onLevelUp);
 
         this.events.once('shutdown', () => {
             this.registry.events.off('changedata-salvage', updateSalvage);
+            this.registry.events.off('changedata-fragments', updateFragments);
             this.registry.events.off('changedata-researchPoints', updateXP);
             this.registry.events.off('changedata-diverLevel', updateXP);
             this.registry.events.off('level_up', onLevelUp);

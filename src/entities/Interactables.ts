@@ -100,3 +100,31 @@ export class OxygenBubble extends Phaser.Physics.Arcade.Sprite {
         this.destroy();
     }
 }
+
+export class ArtifactFragment extends Phaser.Physics.Arcade.Sprite {
+    constructor(scene: Phaser.Scene, x: number, y: number) {
+        super(scene, x, y, 'artifact');
+        scene.add.existing(this);
+        scene.physics.add.existing(this);
+        
+        // Float animation
+        scene.tweens.add({
+            targets: this,
+            y: y - 10,
+            duration: 1500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Tint to distinguish from main artifact
+        this.setTint(0x00ffaa);
+        this.setScale(0.5);
+    }
+
+    collect() {
+        let frags = this.scene.registry.get('fragments') || 0;
+        this.scene.registry.set('fragments', frags + 1);
+        this.destroy();
+    }
+}

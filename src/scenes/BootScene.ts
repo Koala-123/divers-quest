@@ -9,29 +9,42 @@ export class BootScene extends Phaser.Scene {
     preload() {
         this.load.plugin('rexvirtualjoystickplugin', VirtualJoystickPlugin, true);
 
-        const diverGraphics = this.make.graphics({x:0, y:0});
-        // Tank on back
-        diverGraphics.fillStyle(0xffff00, 1);
-        diverGraphics.fillRoundedRect(10, 20, 20, 40, 5);
-        // Legs pointing UP
-        diverGraphics.fillStyle(0xaaaaaa, 1);
-        diverGraphics.fillRoundedRect(8, 0, 10, 30, 5); // Left leg
-        diverGraphics.fillRoundedRect(22, 0, 10, 30, 5); // Right leg
+        // Tank
+        const tankG = this.make.graphics({x:0, y:0});
+        tankG.fillStyle(0xffff00, 1);
+        tankG.fillRoundedRect(0, 0, 20, 40, 5);
+        tankG.generateTexture('diver_tank', 20, 40);
+        tankG.destroy();
+
         // Torso
-        diverGraphics.fillStyle(0xdddddd, 1);
-        diverGraphics.fillRoundedRect(10, 25, 20, 30, 8);
-        // Arms pointing DOWN/OUT
-        diverGraphics.fillStyle(0xaaaaaa, 1);
-        diverGraphics.fillRoundedRect(0, 30, 10, 25, 4); // Left arm
-        diverGraphics.fillRoundedRect(30, 30, 10, 25, 4); // Right arm
-        // Head pointing DOWN
-        diverGraphics.fillStyle(0xdddddd, 1);
-        diverGraphics.fillCircle(20, 65, 12);
-        // Visor
-        diverGraphics.fillStyle(0x00ffff, 1);
-        diverGraphics.fillCircle(20, 70, 6);
-        diverGraphics.generateTexture('diver', 40, 80);
-        diverGraphics.destroy();
+        const torsoG = this.make.graphics({x:0, y:0});
+        torsoG.fillStyle(0xdddddd, 1);
+        torsoG.fillRoundedRect(0, 0, 20, 30, 8);
+        torsoG.generateTexture('diver_torso', 20, 30);
+        torsoG.destroy();
+
+        // Leg
+        const legG = this.make.graphics({x:0, y:0});
+        legG.fillStyle(0xaaaaaa, 1);
+        legG.fillRoundedRect(0, 0, 10, 30, 5);
+        legG.generateTexture('diver_leg', 10, 30);
+        legG.destroy();
+
+        // Arm
+        const armG = this.make.graphics({x:0, y:0});
+        armG.fillStyle(0xaaaaaa, 1);
+        armG.fillRoundedRect(0, 0, 10, 25, 4);
+        armG.generateTexture('diver_arm', 10, 25);
+        armG.destroy();
+
+        // Head
+        const headG = this.make.graphics({x:0, y:0});
+        headG.fillStyle(0xdddddd, 1);
+        headG.fillCircle(12, 12, 12);
+        headG.fillStyle(0x00ffff, 1);
+        headG.fillCircle(12, 18, 6); // Visor offset
+        headG.generateTexture('diver_head', 24, 24);
+        headG.destroy();
 
         // Predator (Shark/Eel)
         const predGraphics = this.make.graphics({x:0, y:0});

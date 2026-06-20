@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { InputManager } from '../systems/InputManager';
-import { Salvage, Flora, OxygenBubble, Artifact } from '../entities/Interactables';
+import { Salvage, Flora, OxygenBubble, Artifact, ArtifactFragment } from '../entities/Interactables';
 import { Predator } from '../entities/Predator';
 
 export class DiveScene extends Phaser.Scene {
@@ -22,6 +22,7 @@ export class DiveScene extends Phaser.Scene {
 
     create() {
         this.startingSalvage = this.registry.get('salvage');
+        this.registry.set('fragments', 0);
 
         // Lighting
         this.lights.enable();
@@ -98,14 +99,28 @@ export class DiveScene extends Phaser.Scene {
             p.takeDamage(pred.damage);
             // Bounce player back to prevent multiple hits instantly
             const bounce = new Phaser.Math.Vector2(p.x - pred.x, p.y - pred.y).normalize();
-            p.setVelocity(bounce.x * 500, bounce.y * 500);
+            (p.body as Phaser.Physics.Arcade.Body).setVelocity(bounce.x * 500, bounce.y * 500);
         });
 
-        // The ultimate goal: Ancient Artifact
-        const artifact = new Artifact(this, 1000, 4900);
-        artifact.setPipeline('Light2D');
-        this.physics.add.overlap(this.player, artifact, (_p, a) => {
-            (a as Artifact).collect();
+        // Scatter 3 Artifact Fragments in the deep zone
+        const fragmentGroup = this.physics.add.group({ classType: ArtifactFragment });
+        for(let i=0; i<3; i++) {
+            const fx = Phaser.Math.Between(300, 1700);
+            const fy = Phaser.Math.Between(3500, 4500);
+            let frag = new ArtifactFragment(this, fx, fy);
+            frag.setPipeline('Light2D');
+            fragmentGroup.add(frag);
+        }
+
+        this.physics.add.overlap(this.player, fragmentGroup, (_p, a) => {
+            (a as ArtifactFragment).collect();
+        });
+
+        // Listen for fragment collection to spawn true artifact
+        this.registry.events.on('changedata-fragments', (_parent: any, value: number) => {
+            if (value === 3) {
+                this.spawnTrueArtifact();
+            }
         });
 
         this.events.on('win_game', () => {
@@ -137,6 +152,30 @@ export class DiveScene extends Phaser.Scene {
     resize(gameSize: Phaser.Structs.Size) {
         this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
         this.inputManager.resize(gameSize);
+    }
+
+    spawnTrueArtifact() {
+        const ax = 1000;
+        const ay = 4900;
+        const artifact = new Artifact(this, ax, ay);
+        artifact.setPipeline('Light2D');
+        this.physics.add.overlap(this.player, artifact, (_p, a) => {
+            (a as Artifact).collect();
+        });
+
+        // Spawn a ring of guarding predators!
+        for (let i = 0; i < 5; i++) {
+            const angle = (i / 5) * Math.PI * 2;
+            const dist = 150;
+            const px = ax + Math.cos(angle) * dist;
+            const py = ay + Math.sin(angle) * dist;
+            let p = new Predator(this, px, py, this.player);
+            p.setPipeline('Light2D');
+            // Give them a tighter patrol logic or just let them chase
+            p.patrolRadius = 200;
+            p.patrolCenter = new Phaser.Math.Vector2(ax, ay);
+            this.predatorGroup.add(p);
+        }
     }
 
     handleEmergencyExtraction() {
